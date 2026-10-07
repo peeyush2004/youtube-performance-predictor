@@ -1,0 +1,59 @@
+# Python bytecode and test/type-check caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local environment files
+.venv/
+.venv_broken/
+.venv_broken_2/
+.python311/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Notebook and Streamlit state
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+
+# Local datasets and generated model artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+models/*
+!models/.gitkeep
+models/baseline_regression_pipeline.joblib
+models/group_b_random_forest_pipeline.joblib
+*.joblib
+*.pkl
+*.pickle
+*.onnx
+
+# Temporary files, logs, credentials, and operating-system files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.orig
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+client_secret*.json
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Include only the final application model and its required metadata
+!models/group_b_xgboost_pipeline.joblib
+!models/group_b_xgboost_metadata.json

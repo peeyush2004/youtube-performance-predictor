@@ -1,0 +1,21 @@
+region,observations,MAE,model
+CA,6445,873819.8474628775,RandomForest Group B
+DE,6456,634808.6001683656,RandomForest Group B
+FR,6404,465317.747414163,RandomForest Group B
+GB,3065,3782512.22618268,RandomForest Group B
+IN,3951,754100.4782093089,RandomForest Group B
+JP,3112,234566.06081324912,RandomForest Group B
+KR,4600,327414.12526027864,RandomForest Group B
+MX,5992,329122.5464254178,RandomForest Group B
+RU,6256,233054.7173171258,RandomForest Group B
+US,4722,3536002.834916026,RandomForest Group B
+CA,6445,915283.3225104645,HistGradientBoosting Group B
+DE,6456,654114.4382590964,HistGradientBoosting Group B
+FR,6404,479433.4083662475,HistGradientBoosting Group B
+GB,3065,3510083.294401215,HistGradientBoosting Group B
+IN,3951,796925.7865453128,HistGradientBoosting Group B
+JP,3112,248258.60963637385,HistGradientBoosting Group B
+KR,4600,336054.4927633771,HistGradientBoosting Group B
+MX,5992,338432.90002279216,HistGradientBoosting Group B
+RU,6256,242849.87536957467,HistGradientBoosting Group B
+US,4722,3541506.6368725705,HistGradientBoosting Group B

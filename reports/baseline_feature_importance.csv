@@ -1,0 +1,21 @@
+feature,importance,source_feature
+description_length,0.1237597357629506,description_length
+description_word_count,0.10151573606113361,description_word_count
+tag_count,0.09789686655368833,tag_count
+title_length,0.09125886831836905,title_length
+publish_hour,0.09022257012762755,publish_hour
+region_GB,0.0700061112177403,region_GB
+title_word_count,0.05197804655370013,title_word_count
+region_CA,0.05120971954742938,region_CA
+publish_day_of_week,0.043943122140413154,publish_day_of_week
+region_IN,0.042795069511647084,region_IN
+region_US,0.0420834056284466,region_US
+publish_month,0.031959810923697235,publish_month
+category_name_Music,0.027230064945686337,category_name_Music
+publish_year,0.01267029180253229,publish_year
+category_name_Entertainment,0.012039037607198246,category_name_Entertainment
+region_KR,0.01171570485169768,region_KR
+category_name_Comedy,0.010522559443921385,category_name_Comedy
+category_name_News & Politics,0.009630092233361505,category_name_News & Politics
+category_name_Sports,0.007987809700769285,category_name_Sports
+region_DE,0.007426232388524772,region_DE

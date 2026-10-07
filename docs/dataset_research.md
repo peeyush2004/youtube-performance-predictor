@@ -1,0 +1,134 @@
+# Dataset Research
+
+> **Historical research record, not the implemented model contract.** This review evaluated the original fixed-horizon forecasting and pre-publication requirements. The project later adopted snapshot-level estimation using the DataSnaek trending dataset; current scope and results are documented in `docs/modeling_dataset.md`, `docs/model_training.md`, and `docs/final_model_contract.md`.
+
+Research conducted 2026-10-03. At the time of this review, no dataset files had been downloaded or copied into the project. Counts and versions below are what the cited pages reported on the access date. Where a card did not publish a row count or full schema, this document says so rather than estimating it.
+
+## 1. Project Prediction Requirement
+
+The approved task predicts video performance from information known immediately before scheduled publication. The primary label is cumulative views at a fixed 30-day horizon after publication (`views_30d`). The Low/Medium/High label is derived from training-only 33rd/67th percentile thresholds. Inputs must be available by the prediction cutoff; post-publication metrics are never predictors.
+
+A usable dataset therefore needs both a defensible publication time and a view count observed at the specified 30-day horizon. A `views` field and a `published_at` field alone are not enough. Snapshot time must be recorded independently from publication time. This review treats day-level dates as approximate, not exact 30-day timestamps.
+
+## 2. Dataset Candidates
+
+| Dataset | Source | Rows | Publication date | Observation date | Views | 30-day target possible? | Pre-publication features | Channel information | Leakage risk | License | Status |
+|---|---|---:|---|---|---|---|---|---|---|---|---|
+| Trending YouTube Video Statistics (DataSnaek; Kaggle Version 115) | [Kaggle dataset](https://www.kaggle.com/datasets/datasnaek/youtube-new) and [scraper source](https://github.com/mitchelljy/Trending-YouTube-Scraper) | Not stated on card; 10 country CSVs, up to 200 trending entries/region/day over about six months | Yes: `publishedAt` | Yes: `trending_date`, day precision; scraper stamps the date when it calls the API | Yes: `view_count` from that API response | **No, not as a reliable full-cohort target.** A day-30 snapshot may exist for some still-trending videos; exact horizon and coverage are not assured | Category, title, description, tags, actual publish timestamp; no duration or scheduled time | Channel ID/title; no historical subscriber snapshot | High: views/likes/comments/dislikes are post-publication snapshots; membership is selected by trending status; metadata may have changed | Kaggle card says CC0; scraper code is BSD-2-Clause. YouTube API terms still apply to API-derived data | Reject for approved target; useful only for trend analysis or a differently defined/censored task |
+| YouTube Trending Video Dataset (Rishav Sharma; Kaggle Version 1346) | [Kaggle dataset](https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset) | Not stated on card; 11 country CSVs and 11 category JSONs; up to 200 trending entries/region/day; page reports 4.55 GB | Yes: publish time (`publishedAt`/`publish_time` naming varies across releases) | Yes: `trending_date`, daily snapshots | Yes: current `views`/`view_count` at collection | **No, not reliably for all rows.** Same censored, day-resolution snapshot problem as the original | Category, title, description, tags, actual publish time; no duration/scheduled time | Channel ID/title; not historical subscriber values | High: all engagement counts are observed after publication; only videos selected for trending are included | Kaggle card says CC0; verify platform/API terms separately | Reject for approved target; large, changing release does not fix target validity |
+| Top Trending Videos YouTube 2021 (Kaggle) | [Kaggle dataset](https://www.kaggle.com/datasets/jyotmakadiya/top-trending-videos-youtube-2021) | Not stated; 10 country CSVs; described as several weeks of data; Version 30, about 101 MB | Yes: upload/publish date-time described | Daily trending records; day-level observation date | Yes: views in the daily statistics | **No, not reliably.** Short, selected observation window and missing daily observations prevent a complete fixed-horizon label | Title, description, tags, category and actual publish time described; no duration/schedule | Channel fields are part of the scraper-style schema; no dated subscriber snapshot | High: post-publication metrics and trending-only selection; exact file headers are not fully enumerated in the card | Kaggle card says CC0 | Reject; not enough target coverage or schema provenance |
+| (August 2020) YouTube Trending Videos Statistics (Kaggle) | [Kaggle dataset](https://www.kaggle.com/datasets/kunwardeepak/youtube-trending-august-2020) | Not stated; 11 country CSVs plus category mapping; Version 2, about 3.43 MB | Yes: `publishedAt` | Yes: `trending_date` and date-stamped files, day precision | Yes: `view_count` | **No, not reliably.** Day-level snapshots exist, but only for trending observations; no exact day-30 snapshot or complete cohort is guaranteed | `categoryId`, title, description, tags and actual `publishedAt`; no duration or scheduled time | `channelId` and `channelTitle`; no historical subscriber count | High: metrics are observed while trending and after publication; missingness is selection/censoring, not random | Kaggle card says CC0 | Reject for approved target |
+| YouTube Trending Videos Stats 2026 (Kaggle) | [Kaggle dataset](https://www.kaggle.com/datasets/bsthere/youtube-trending-videos-stats-2026) | Card claims 178,399+ records; Version 3 lists 11 country CSVs plus dictionary, about 229 MB. The page's overview and file-summary column counts are inconsistent | Yes: `publish_time` | Yes: `trending_date`, described as a snapshot date; day precision | Yes: `views` at collection time | **No, not reliably.** It has dated snapshots but still only trending videos and no guaranteed exact day-30 observation | `category_id`, title, description, tags and publish time; no duration or scheduled publish time | `channel_id`, `channel_title`; no historic subscriber snapshot | High: current likes/comments/views and trending selection; dislikes are described as backfilled estimates; schema/card discrepancies need inspection | Kaggle card says CC0; validate upstream data/API terms and third-party dislike provenance | Reject for approved target; only conditional day-level outcome approximation |
+| YouTube-8M (Google Research, May 2018 release) | [Dataset overview](https://research.google.com/youtube8m/) and [download/version details](https://research.google.com/youtube8m/download.html) | Google pages report 6.1M videos for one release and 5.6M for an updated release; version matters | No publication timestamp in the described records | No view observation timestamp | No view-count target | **No.** The task is video understanding/classification, not view-performance prediction | No title, description, tags, category ID, duration, or schedule fields in the described feature records; labels are topical entities | Video IDs are anonymized; no channel fields | Not a views leakage issue because no views exist; labels/video features are not the approved target or V1 metadata | CC BY 4.0 per Google download page | Reject: wrong task/schema despite large scale |
+| Official YouTube APIs (collection route, not a published dataset) | [Videos API](https://developers.google.com/youtube/v3/docs/videos), [Channels API](https://developers.google.com/youtube/v3/docs/channels), [Analytics reports](https://developers.google.com/youtube/analytics/channel_reports) | Not applicable; data would have to be collected prospectively or for authorized channels | API exposes actual `publishedAt` and, for eligible private-to-public scheduling, `status.publishAt` | A collector can record its own API request timestamp; current API responses are not historical snapshots | Current `statistics.viewCount`; authorized Analytics can report views by day | **Potentially, with a prospective capture design and a request at the fixed horizon.** Current public counts alone cannot reconstruct an old 30-day value | Video API exposes category, duration, title, description, and tags; only useful as V1 inputs if archived at/before cutoff | Channel API exposes creation date and current subscribers; current subscribers do not provide historical subscriber snapshots | High unless every feature snapshot is saved before publication and every outcome snapshot is timestamped; current values leak | Not a dataset license; API Services Terms/Developer Policies govern use and retention | Closest viable route, but requires approval and a defined first-party collection plan; no API was called |
+
+## 3. Detailed Candidate Analysis
+
+### DataSnaek Trending YouTube Video Statistics
+
+The Kaggle card describes daily records of up to 200 top-trending videos per day for multiple countries and reports 20 files in Version 115 (country CSVs and category JSON). Its displayed data size is about 539 MB, but the card does not give an exact row count. The linked scraper confirms the CSV fields: `video_id`, `title`, `publishedAt`, `channelId`, `channelTitle`, `categoryId`, `trending_date`, `tags`, `view_count`, `likes`, `dislikes`, `comment_count`, `thumbnail_link`, `comments_disabled`, `ratings_disabled`, and `description`.
+
+The scraper sets `trending_date` on the day it makes the API request and reads `statistics.viewCount` in that request. This gives the metric a real day-level observation date, which is better than an undated current count. It does not give the exact observation time, exact +30-day count for every published video, or observations for videos that are not trending. Only videos that remain in the trending sample around day 30 can have a close day-30 count. This creates survivorship/selection bias and fails the approved full-cohort target requirement. Kaggle lists CC0 for the dataset; the scraper code has BSD-2-Clause. These licenses do not eliminate YouTube API data-use obligations.
+
+### Rishav Sharma YouTube Trending Video Dataset
+
+The Kaggle card describes an updated daily multi-region trending dataset with up to 200 entries per region/day. On the access date it displayed Version 1346, 11 regional CSVs and 11 category JSON files, and about 4.55 GB, but did not state a total row count. The card describes titles, channel titles, publish times, tags, views, likes/dislikes, descriptions, comments, and category IDs; exact header spelling differs between releases and should be verified from a versioned file only if later approved.
+
+Its daily `trending_date` supports day-level snapshot matching in principle, but not complete, exact 30-day labels. The repeated rows are snapshots of videos selected for trending, not a census of uploads; a large file size does not solve that selection problem. Its page lists CC0, subject to the same upstream/API terms caveat.
+
+### Top Trending Videos YouTube 2021
+
+The card describes ten regional files and several weeks of data, and says it was collected through a modified version of the DataSnaek scraper. It reports 16 columns and a Version 30 collection of about 101 MB, but no total row count or exact full column listing. It describes title, upload date/time, and description, with region-specific files. The scraper lineage suggests daily trending snapshots, but the public card alone is insufficient to certify every header or the exact observation timestamp for each row.
+
+Even granting day-level snapshots, the short observation period and trending-only inclusion cannot furnish complete 30-day targets for the sampled uploads. CC0 is stated on the Kaggle card.
+
+### August 2020 YouTube Trending Videos Statistics
+
+The card identifies eleven country files plus a category mapping (Version 2, about 3.43 MB), but does not publish a row count. The described 16 fields are `video_id`, `title`, `publishedAt`, `channelId`, `channelTitle`, `categoryId`, `trending_date`, `tags`, `view_count`, `likes`, `dislikes`, `comment_count`, `thumbnail_link`, `comments_disabled`, `ratings_disabled`, and `description` (some display names may be normalized in the CSV). The date-stamped file names and `trending_date` indicate daily statistics snapshots.
+
+The snapshot timing is adequate to identify when a particular sampled metric was collected at day resolution, not to supply an exact fixed-horizon outcome for every upload. The dataset is limited to videos trending in the represented regions/dates. The Kaggle card lists CC0.
+
+### YouTube Trending Videos Stats 2026
+
+The card claims 178,399+ records across eleven countries, and describes `video_id`, `trending_date`, `title`, `channel_title`, `views`, `likes`, `dislikes`, `publish_time`, `category_id`, `tags`, `comments`, `channel_id`, and `description`. It identifies the source as YouTube Data API v3 `videos.list` with `chart=mostPopular`, plus Return YouTube Dislike API values where dislikes are backfilled. Its current file explorer lists Version 3, about 229 MB, eleven country files, and a data dictionary, while the same page summary reports a different total column count from the 13-column narrative. Thus the exact row/column inventory needs file-level verification before any use; the overview row count is author-reported, not independently counted here.
+
+`trending_date` is a date-level observation marker and the description says views are at collection time. That is useful provenance but still does not make the dataset a day-30 panel. Current post-publication metrics, trend-only selection, dislike estimates, and page/schema inconsistencies are material concerns. The official Videos API documentation also notes that the definition of `statistics.viewCount` changed on 2026-08-24 to count views when playback begins across video formats; snapshots spanning that change may not be fully comparable. The Kaggle card lists CC0.
+
+### YouTube-8M
+
+Google Research describes millions of YouTube video IDs with audio/video features and topical entity labels. The download page lists different video counts for different releases (6.1M and 5.6M are both reported) and specifies CC BY 4.0. The described video-level records contain an ID, labels, and mean audio/RGB features; frame-level releases add temporal features. They do not provide the publication timestamps and view-count snapshots needed for this project. IDs are anonymized in the updated release. Dataset size is not a substitute for target/schema compatibility.
+
+### Official API Collection Route (Not an Existing Dataset)
+
+The YouTube Data API documents `snippet.publishedAt`, `status.publishAt` where applicable, category, title, description, tags, duration, and current statistics. `channels.list` documents channel creation date and current subscriber count. These fields establish that many desired variables are technically retrievable, but `statistics.viewCount` in a normal `videos.list` response is the count at request time. It is not a query for a video's historical view count as of an arbitrary past date. A collector can preserve its request timestamp and poll prospective videos, including at the day-30 horizon; the pre-publication metadata must also be saved before the cutoff.
+
+The YouTube Analytics API offers time-based daily reports for authorized channel owners, not an open public bulk archive for arbitrary channels. Daily totals have day-level granularity and may not equal a cumulative counter at the exact instant 30 days after publication. The official API route is therefore a promising prospective, likely first-party dataset plan, but needs a separate approved collection/access design and review of current API Services Terms and Developer Policies. It is not a dataset candidate that can be downloaded now.
+
+## 4. Leakage Assessment
+
+The labels below describe use under the approved **pre-publication** cutoff. A field may be retained for provenance or target construction while being forbidden in the model input matrix.
+
+| Field / field family | Classification | Reason and handling |
+|---|---|---|
+| `video_id`, `channelId` / `channel_id` | SAFE (identifier only) | Useful for deduplication, joins, and grouped evaluation; exclude from ordinary V1 predictors to prevent memorization. |
+| `trending_date` / snapshot date | SAFE (provenance only) | Identifies when a trend scraper recorded the metrics at day precision. Use to assess target alignment and order snapshots; do not use as an ordinary feature. |
+| `categoryId` / `category_id` | POTENTIAL LEAKAGE | Could be pre-publication metadata, but the candidate files retrieve it while videos are trending and do not preserve the category's value as of the cutoff. Confirm vintage before treating as safe. |
+| `title`, `description`, `tags`, `thumbnail_link`, `channelTitle` | POTENTIAL LEAKAGE | May have existed at publication, but the datasets record the value returned at the later trending snapshot; edits or current metadata may differ. Use only with a verified pre-publication archive. |
+| `publishedAt` / `publish_time` | POTENTIAL LEAKAGE | Records the actual publication time, which is known at/after publication; it is not the scheduled time available just before the cutoff. It can be used for retrospective alignment/splitting, not assumed as a V1 scheduled-time feature. |
+| `view_count` / `views` in a dated snapshot | TARGET only when aligned | It is a target candidate only if the observation is at the approved fixed horizon. Otherwise it is a post-publication count and a **DEFINITE LEAKAGE** input; it is also an incompatible-age label if used as the target without horizon controls. |
+| `likes`, `dislikes`, `comment_count` / `comments` | DEFINITE LEAKAGE | These are post-publication engagement counts at collection time. Never use for pre-publication input. Dislike estimates in the 2026 candidate add measurement uncertainty. |
+| Current video engagement rate or watch time | DEFINITE LEAKAGE / absent | Post-publication behavior; not an admissible pre-publication feature. The reviewed Kaggle schemas do not document watch time. |
+| `comments_disabled`, `ratings_disabled` | POTENTIAL LEAKAGE | Status is observed in a post-publication snapshot and may not represent the state at the prediction cutoff. Do not use without dated pre-cutoff status. |
+| Trending inclusion / popularity or rank | DEFINITE SELECTION LEAKAGE for this task | Candidate rows exist because the video was already trending, a post-publication event. Even when no explicit numeric rank column exists, conditioning the dataset on trend-list inclusion changes the target population and makes results invalid for arbitrary new uploads. |
+| Current `subscriberCount` from a later API lookup | DEFINITE LEAKAGE for historical rows | It is a later channel snapshot, not subscriber count at the video's prediction cutoff. A dated historical snapshot would be required. |
+
+## 5. Feature Availability Matrix
+
+Statuses refer to fields available in each dataset as published, not whether a field is safe at the pre-publication cutoff. `Derivable` means computable from documented fields, sometimes with an external lookup; notes are important. `NOT AVAILABLE` for scheduled weekday/hour means the planned schedule is absent. Actual publish weekday/hour can be derived from `publishedAt`, but that is not equivalent and may be unavailable before the cutoff.
+
+| V1 feature | DataSnaek | Rishav | 2021 | Aug 2020 | 2026 stats | YouTube-8M |
+|---|---|---|---|---|---|---|
+| Category | AVAILABLE (`categoryId`) | AVAILABLE (`category_id`) | AVAILABLE (card describes category) | AVAILABLE (`categoryId`) | AVAILABLE (`category_id`) | NOT AVAILABLE (topic labels are not YouTube category IDs) |
+| Duration | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE (duration is not in described records) |
+| `is_short` | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE |
+| Title length | DERIVABLE from `title` | DERIVABLE from title | DERIVABLE from title | DERIVABLE from `title` | DERIVABLE from `title` | NOT AVAILABLE |
+| Description length | DERIVABLE from `description` | DERIVABLE from description | DERIVABLE from description | DERIVABLE from `description` | DERIVABLE from `description` | NOT AVAILABLE |
+| Tag count | DERIVABLE from `tags` | DERIVABLE from tags | DERIVABLE from tags | DERIVABLE from `tags` | DERIVABLE from `tags` | NOT AVAILABLE |
+| Scheduled weekday | NOT AVAILABLE; actual publish date only | NOT AVAILABLE; actual publish date only | NOT AVAILABLE; actual publish date only | NOT AVAILABLE; actual publish date only | NOT AVAILABLE; actual publish date only | NOT AVAILABLE |
+| Scheduled hour | NOT AVAILABLE; actual publish time only | NOT AVAILABLE; actual publish time only | NOT AVAILABLE; actual publish time only | NOT AVAILABLE; actual publish time only | NOT AVAILABLE; actual publish time only | NOT AVAILABLE |
+| Channel age | DERIVABLE only via `channelId` + external channel-creation lookup; not a stored snapshot | DERIVABLE via `channel_id` + external lookup if exact IDs are present | DERIVABLE only if a channel ID is present in the released file | DERIVABLE via `channelId` + external lookup | DERIVABLE via `channel_id` + external lookup | NOT AVAILABLE (IDs anonymized/no channel field) |
+| Subscriber count at cutoff | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE | NOT AVAILABLE |
+
+For the five trending datasets, deriving text lengths or tag counts from a later snapshot does **not** prove the derived feature was the value available before publication. Their channel IDs also permit present-day channel lookups, but current subscriber counts cannot be backdated. Historical channel averages are technically derivable only among earlier videos/snapshots represented in the trending sample; the sparse, selected sample does not support a reliable channel-wide baseline. Any such feature would need strict as-of-time filtering and would remain selection-biased.
+
+## 6. Recommended Dataset
+
+**No suitable public dataset found for the current 30-day target definition.**
+
+None of the six packaged datasets reviewed supplies a complete, representative cohort of uploads with a reliably measured cumulative view count at the exact fixed 30-day horizon. The five trending-statistics datasets have day-level observation markers and could yield approximate day-30 counts for a subset when a snapshot happens to exist around that date. But videos disappear from the observed sample when they are no longer trending, so missing day-30 counts are systematically related to popularity. This cannot be repaired by treating the latest `views` value as `views_30d`, filling in observation dates, or using only surviving rows without changing the target population and potentially the methodology. YouTube-8M has neither the required views nor publication timestamps.
+
+The closest existing alternatives are:
+
+- Use a trend dataset only for a separately approved task about trending-video snapshots or performance conditional on reaching the trending list. That would change the task/population and does not satisfy this approved design.
+- Prospectively collect authorized video metadata before publication and timestamp API view-count observations through the fixed horizon. This best preserves the approved target, but needs a collection/access plan, coverage decision, and YouTube policy review before implementation. For daily Analytics reports, confirm whether their calendar-day metric is acceptable; do not silently call it an exact instant-30-day cumulative count.
+
+No dataset is recommended for download into `data/raw/` at this stage.
+
+## 7. Reproducibility
+
+| Item | Record |
+|---|---|
+| Research access date | 2026-10-03 |
+| Dataset file download/copy | None; no Kaggle CLI/API or YouTube API request was made |
+| DataSnaek source/version | [Kaggle `datasnaek/youtube-new`](https://www.kaggle.com/datasets/datasnaek/youtube-new), Version 115 as displayed; linked scraper [mitchelljy/Trending-YouTube-Scraper](https://github.com/mitchelljy/Trending-YouTube-Scraper), BSD-2-Clause code license |
+| Rishav source/version | [Kaggle `rsrishav/youtube-trending-video-dataset`](https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset), Version 1346 as displayed; live-updated dataset |
+| 2021 source/version | [Kaggle `jyotmakadiya/top-trending-videos-youtube-2021`](https://www.kaggle.com/datasets/jyotmakadiya/top-trending-videos-youtube-2021), Version 30 as displayed |
+| August 2020 source/version | [Kaggle `kunwardeepak/youtube-trending-august-2020`](https://www.kaggle.com/datasets/kunwardeepak/youtube-trending-august-2020), Version 2 as displayed |
+| 2026 source/version | [Kaggle `bsthere/youtube-trending-videos-stats-2026`](https://www.kaggle.com/datasets/bsthere/youtube-trending-videos-stats-2026), Version 3 as displayed; page reports 178,399+ records but schema summary is inconsistent |
+| YouTube-8M source/version | [Google Research overview](https://research.google.com/youtube8m/) and [download page](https://research.google.com/youtube8m/download.html); multiple historical versions; CC BY 4.0 on download page |
+| Kaggle license statements | Each of the five cited Kaggle cards reports CC0. Treat this as the card's stated dataset license, not proof of rights over all underlying YouTube content or exemption from API terms. |
+| Official API terms | Review [YouTube API Services Terms](https://developers.google.com/youtube/terms/api-services-terms-of-service) and [Developer Policies](https://developers.google.com/youtube/terms/developer-policies) before any API collection or retention. |
+| Preprocessing required if any trend data is later approved | Pin the exact Kaggle dataset version; verify CSV headers, row counts, date parsing, and duplicate video/region/day rows; parse `publishedAt` and `trending_date` without inventing clock times; preserve the observation date; do not replace missing snapshots with current values; do not use post-publication metrics as features; assess censoring and trending-selection bias. |
+| Preprocessing for a prospective collection route | Save the pre-publication feature snapshot and timestamp; save exact API response time and view count at outcome observation; validate horizon tolerance before labeling; retain source/version and API request provenance; apply current terms and deletion/update requirements. |
+
+This document records discovery and validation only. Dataset collection, download, copying to `data/raw/`, and any methodological change remain pending explicit approval.

@@ -1,0 +1,137 @@
+{
+  "model": "XGBRegressor",
+  "xgboost_version": "3.2.0",
+  "target": "log_observed_views",
+  "feature_group": "Group B",
+  "feature_list": [
+    "region",
+    "category_name",
+    "title_length",
+    "title_word_count",
+    "description_length",
+    "description_word_count",
+    "tag_count",
+    "publish_year",
+    "publish_month",
+    "publish_day_of_week",
+    "publish_hour",
+    "description_missing",
+    "days_to_trending"
+  ],
+  "hyperparameters": {
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "min_child_weight": 5,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0,
+    "reg_lambda": 1,
+    "objective": "reg:squarederror",
+    "eval_metric": "rmse",
+    "random_state": 42,
+    "n_jobs": -1,
+    "tree_method": "hist"
+  },
+  "preprocessing": {
+    "categorical": "train-only constant Unknown imputation then OneHotEncoder(handle_unknown='ignore', sparse_output=True)",
+    "numeric": "train-only median imputation then StandardScaler",
+    "column_transformer_sparse_threshold": 1.0,
+    "feature_engineering": "unchanged Group B feature list",
+    "matrix_format": "scipy CSR sparse; no dense conversion",
+    "estimated_dense_train_matrix_bytes": 75968000,
+    "observed_sparse_train_matrix_bytes": 37984004
+  },
+  "target_inverse_transform": "Clip predicted log1p views at zero, apply expm1, and enforce non-negative predictions, matching Group B references.",
+  "split": {
+    "train": {
+      "rows": 237400,
+      "unique_videos": 123672,
+      "date_range": [
+        "2017-11-14",
+        "2018-04-02"
+      ]
+    },
+    "validation": {
+      "rows": 50981,
+      "unique_videos": 32257,
+      "date_range": [
+        "2018-04-03",
+        "2018-05-12"
+      ]
+    },
+    "test": {
+      "rows": 51003,
+      "unique_videos": 26780,
+      "date_range": [
+        "2018-05-13",
+        "2018-06-14"
+      ]
+    }
+  },
+  "split_method": "Existing chronological date windows with whole-video assignment; no new split created.",
+  "random_state": 42,
+  "training_timestamp_utc": "2026-10-03T12:57:07.194412+00:00",
+  "training_seconds": 6.680330399999548,
+  "versions": {
+    "python": ".venv Python 3.11.9",
+    "xgboost": "3.2.0",
+    "scikit_learn": "1.9.1",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "scipy": "1.17.1",
+    "joblib": "1.6.0"
+  },
+  "metrics_file": "reports/rf_histgb_xgb_results.csv",
+  "xgboost_bucket_metrics_file": "reports/xgb_bucket_metrics.csv",
+  "all_model_bucket_comparison_file": "reports/rf_histgb_xgb_bucket_comparison.csv",
+  "model_path": "models/group_b_xgboost_pipeline.joblib",
+  "reference_models_loaded_read_only": [
+    "models\\group_b_random_forest_pipeline.joblib",
+    "models\\group_b_histgradientboosting_pipeline.joblib"
+  ],
+  "validation_test_summary": [
+    {
+      "model": "RandomForest Group B",
+      "test_MAE": 973393.9495778492,
+      "test_RMSE": 4152636.24875729,
+      "test_R2": 0.0349294023345256,
+      "test_log_MAE": 1.0966793018395016,
+      "over_1M_total_absolute_error_contribution_pct": 87.10647857128073,
+      "over_10M_total_absolute_error_contribution_pct": 43.660393884300454,
+      "over_10M_MAE": 20032942.89917821,
+      "over_10M_mean_signed_error": -19975517.983400963,
+      "over_10M_mean_predicted_to_actual_ratio": 0.08863714699318528,
+      "validation_MAE": 466058.4045513613,
+      "test_to_validation_MAE_ratio": 2.0885664544873106
+    },
+    {
+      "model": "HistGradientBoosting Group B",
+      "test_MAE": 974215.2228417782,
+      "test_RMSE": 4121922.122807428,
+      "test_R2": 0.0491525031348688,
+      "test_log_MAE": 1.1062911920273022,
+      "over_1M_total_absolute_error_contribution_pct": 86.80530363455789,
+      "over_10M_total_absolute_error_contribution_pct": 43.62208150298463,
+      "over_10M_MAE": 20032251.204735935,
+      "over_10M_mean_signed_error": -20029810.47449923,
+      "over_10M_mean_predicted_to_actual_ratio": 0.08616010686710282,
+      "validation_MAE": 465575.3777250504,
+      "test_to_validation_MAE_ratio": 2.0924973043078525
+    },
+    {
+      "model": "XGBoost Group B",
+      "test_MAE": 964651.5679414575,
+      "test_RMSE": 4093751.9156187056,
+      "test_R2": 0.06210473303099673,
+      "test_log_MAE": 1.1003547495664177,
+      "over_1M_total_absolute_error_contribution_pct": 86.63685786818873,
+      "over_10M_total_absolute_error_contribution_pct": 43.520760225350514,
+      "over_10M_MAE": 19789526.766798392,
+      "over_10M_mean_signed_error": -19774746.46683071,
+      "over_10M_mean_predicted_to_actual_ratio": 0.09779714486137656,
+      "validation_MAE": 453751.3218898964,
+      "test_to_validation_MAE_ratio": 2.125947675311747
+    }
+  ]
+}

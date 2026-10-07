@@ -1,0 +1,21 @@
+feature,importance,source_feature
+days_to_trending,0.2676094200636452,days_to_trending
+description_length,0.10129650687554066,description_length
+tag_count,0.08571095282624393,tag_count
+description_word_count,0.08498422122137476,description_word_count
+publish_hour,0.07717564721988322,publish_hour
+title_length,0.07543064797258502,title_length
+title_word_count,0.043720213543032724,title_word_count
+publish_day_of_week,0.036428691802018416,publish_day_of_week
+region_CA,0.03448570809272519,region_CA
+category_name_Music,0.030929720001993486,category_name_Music
+publish_month,0.027058705399014296,publish_month
+category_name_News & Politics,0.00924440316618483,category_name_News & Politics
+category_name_Sports,0.008700266525011354,category_name_Sports
+region_IN,0.00865177076141017,region_IN
+category_name_Entertainment,0.008412907249016886,category_name_Entertainment
+category_name_Comedy,0.008255767229129915,category_name_Comedy
+region_FR,0.007227877096623625,region_FR
+category_name_People & Blogs,0.007070908275545813,category_name_People & Blogs
+region_US,0.006680975461408496,region_US
+region_RU,0.00659014728986707,region_RU
